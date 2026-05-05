@@ -23,7 +23,6 @@
         }
 
         body {
-            /* Nice radial gradient for the background */
             background: radial-gradient(circle at top center, #417BDB, var(--poke-blue));
             color: white;
             font-family: 'Outfit', sans-serif;
@@ -64,7 +63,6 @@
             line-height: 1.1;
         }
 
-        /* --- COGWHEEL ICON --- */
         .settings-icon {
             font-size: 1.8rem;
             cursor: pointer;
@@ -88,31 +86,36 @@
             position: relative;
         }
 
-        /* --- STATS PILLS --- */
+        /* --- STATS GRID --- */
         .stats {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .stat-pill {
             background-color: rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 30px;
             font-family: 'Fredoka', sans-serif;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: white;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
+        }
+
+        .stat-pill.global-stat {
+            background-color: rgba(0, 0, 0, 0.15); /* Slightly lighter for global stats */
         }
         
         .stat-value {
             color: var(--poke-yellow);
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             text-shadow: 1px 1px 0px black;
         }
 
@@ -135,8 +138,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 8px; /* Matches inner boundary */
-            /* Transitions are handled dynamically in JS to prevent the flash! */
+            border-radius: 8px; 
         }
 
         /* Dynamic Hint Classes */
@@ -174,9 +176,7 @@
             box-shadow: 0 0px 0 var(--poke-yellow-dark), 0 0px 0px rgba(0,0,0,0);
         }
         
-        button:hover:not(:disabled) { 
-            background-color: #ffe04d; 
-        }
+        button:hover:not(:disabled) { background-color: #ffe04d; }
         
         button:disabled { 
             background-color: #cccccc;
@@ -194,9 +194,7 @@
             width: 100%;
         }
         
-        .hint-btn:active:not(:disabled) {
-            box-shadow: 0 0px 0 #cccccc;
-        }
+        .hint-btn:active:not(:disabled) { box-shadow: 0 0px 0 #cccccc; }
 
         /* --- BEAUTIFIED MODALS --- */
         .modal-overlay {
@@ -243,16 +241,11 @@
             text-shadow: 2px 2px 0px var(--poke-dark);
         }
 
-        .modal-body {
-            padding: 25px 20px;
-            font-size: 1.1rem;
-        }
-
+        .modal-body { padding: 25px 20px; font-size: 1.1rem; }
         .modal-body p { margin: 0 0 20px 0; line-height: 1.5; }
         .modal-body b { color: var(--poke-yellow); font-size: 1.2rem; }
         .modal-body .btn-container { display: flex; flex-direction: column; gap: 12px; }
 
-        /* Install app button specific styling */
         #installBtn { 
             display: none; 
             background-color: #4CAF50; 
@@ -274,7 +267,9 @@
 <div class="game-board">
     <div class="stats">
         <div class="stat-pill">Score: <span class="stat-value" id="scoreEl">0</span></div>
-        <div class="stat-pill">Time: <span class="stat-value" id="timeEl">15</span>s</div>
+        <div class="stat-pill">Time: <span class="stat-value" id="timeEl">30</span>s</div>
+        <div class="stat-pill global-stat">Best: <span class="stat-value" id="highScoreEl">0</span></div>
+        <div class="stat-pill global-stat">Streak: <span class="stat-value" id="streakEl">0</span></div>
     </div>
 
     <div class="card-wrapper">
@@ -285,7 +280,7 @@
         <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Cards...</p>
     </div>
 
-    <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (Costs 25 Pts)</button>
+    <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (-5 Secs)</button>
 </div>
 
 <div class="modal-overlay" id="resultModal">
@@ -310,9 +305,10 @@
         <div class="modal-body">
             <p>Guess the Pokémon card from the small art snippet!</p>
             <p style="font-size: 0.95rem; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-                ✅ <b>Correct:</b> +100 Pts<br>
-                ⏱️ <b>Time left:</b> +5 Pts/sec<br>
-                🔍 <b>Hints:</b> -25 Pts each
+                ✅ <b>Correct:</b> +100 Pts Base<br>
+                ⏱️ <b>Time Bonus:</b> +5 Pts/sec left<br>
+                🔍 <b>Hints:</b> -5 Seconds off Timer<br>
+                🔥 <b>Streaks:</b> Maintained on correct guesses!
             </p>
             <div class="btn-container">
                 <button id="installBtn">📲 Install App</button>
@@ -348,20 +344,26 @@
         }
     });
 
-    // --- GAME STATE ---
+    // --- GAME STATE & LOCAL STORAGE ---
     let cardPool = [];
     let currentCard = null;
     let hintLevel = 0;
     let score = 0;
-    let timeLeft = 15;
+    let timeLeft = 30; // UPDATED to 30s
     let timerInterval;
     let isRoundActive = false;
+    
+    // Fetch stored data or default to 0
+    let highScore = localStorage.getItem('pokeHighScore') ? parseInt(localStorage.getItem('pokeHighScore')) : 0;
+    let streak = localStorage.getItem('pokeStreak') ? parseInt(localStorage.getItem('pokeStreak')) : 0;
 
     // --- DOM ELEMENTS ---
     const cardImage = document.getElementById('cardImage');
     const optionsContainer = document.getElementById('optionsContainer');
     const scoreEl = document.getElementById('scoreEl');
     const timeEl = document.getElementById('timeEl');
+    const highScoreEl = document.getElementById('highScoreEl');
+    const streakEl = document.getElementById('streakEl');
     const hintBtn = document.getElementById('hintBtn');
     
     const resultModal = document.getElementById('resultModal');
@@ -372,6 +374,7 @@
 
     // --- INITIALIZATION ---
     async function initGame() {
+        updateUI(); // Set initial high score and streak on load
         const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra"';
         const encodedQuery = encodeURIComponent(rawQuery);
         const randomPage = Math.floor(Math.random() * 3) + 1; 
@@ -403,9 +406,8 @@
 
         isRoundActive = true;
         hintLevel = 0;
-        timeLeft = 15;
+        timeLeft = 30; // Reset to 30s
         
-        // Pick random coords for flashlight
         const randX = Math.floor(Math.random() * 50) + 25;
         const randY = Math.floor(Math.random() * 50) + 25;
         document.documentElement.style.setProperty('--pos-x', `${randX}%`);
@@ -417,22 +419,18 @@
         let roundCards = shuffledPool.slice(0, 4);
         currentCard = roundCards[0];
 
-        // HOW WE FIX THE FLASH: Hide the image, remove animations, set class, then fade in on load
         cardImage.style.opacity = 0;
         cardImage.style.transition = 'none';
         cardImage.className = 'mystery-card hint-0';
         
         cardImage.onload = () => {
-            // Force browser to register the non-transitioned state
             void cardImage.offsetWidth;
-            // Turn transitions back on and fade it in
             cardImage.style.transition = 'clip-path 0.5s ease, filter 0.5s ease, opacity 0.3s ease';
             cardImage.style.opacity = 1;
             
             hintBtn.disabled = false;
-            hintBtn.innerText = "Use Hint (Costs 25 Pts)";
+            hintBtn.innerText = "Use Hint (-5 Secs)";
             
-            // Render buttons only after image is loaded
             let options = [...roundCards].sort(() => 0.5 - Math.random());
             optionsContainer.innerHTML = '';
             options.forEach(optionCard => {
@@ -446,14 +444,24 @@
             timerInterval = setInterval(handleTimer, 1000);
         };
         
-        // This triggers the onload event above
         cardImage.src = currentCard.images.large;
     }
 
     function useHint() {
         if (hintLevel < 3 && isRoundActive) {
             hintLevel++;
+            timeLeft -= 5; // Hint costs time now!
+            
+            if (timeLeft <= 0) {
+                timeLeft = 0; // Prevent negative time UI
+                handleStreakReset();
+                endRound(false, "Time's up! The hint cost too much time.");
+                return;
+            }
+
             cardImage.className = `mystery-card hint-${hintLevel}`;
+            updateUI();
+            
             if (hintLevel === 3) {
                 hintBtn.disabled = true;
                 hintBtn.innerText = "Max Hints Used";
@@ -465,19 +473,37 @@
         timeLeft--;
         updateUI();
         if (timeLeft <= 0) {
+            handleStreakReset();
             endRound(false, "Time's up!");
         }
+    }
+    
+    function handleStreakReset() {
+        streak = 0;
+        localStorage.setItem('pokeStreak', streak);
     }
 
     function checkAnswer(selectedName) {
         if (!isRoundActive) return;
         if (selectedName === currentCard.name) {
-            let pointsEarned = 100 + (timeLeft * 5) - (hintLevel * 25);
-            pointsEarned = Math.max(10, pointsEarned); 
+            // New math: Time acts as the bonus modifier automatically
+            let pointsEarned = 100 + (timeLeft * 5); 
             score += pointsEarned;
+            
+            // Handle Streak
+            streak++;
+            localStorage.setItem('pokeStreak', streak);
+
+            // Handle High Score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('pokeHighScore', highScore);
+            }
+
             endRound(true, `You earned ${pointsEarned} points!`);
         } else {
-            endRound(false, `Incorrect!`);
+            handleStreakReset();
+            endRound(false, `Incorrect! Streak Reset.`);
         }
     }
 
@@ -504,7 +530,6 @@
         resultModal.style.display = "none";
         cardPool = cardPool.filter(c => c.id !== currentCard.id);
         
-        // Show loading text while next image prepares
         optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Next Card...</p>`;
         
         startRound();
@@ -516,6 +541,8 @@
     function updateUI() {
         scoreEl.innerText = score;
         timeEl.innerText = timeLeft;
+        highScoreEl.innerText = highScore;
+        streakEl.innerText = streak;
     }
 
     initGame();
