@@ -130,7 +130,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            overflow: hidden; /* Keeps the overlay banner inside the border */
+            overflow: hidden; /* Keeps the pixel grid inside the border */
         }
 
         .mystery-card {
@@ -146,26 +146,54 @@
         .hint-2 { clip-path: circle(25% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-3 { clip-path: circle(100% at 50% 50%); filter: grayscale(0%); }
 
-        /* --- IN-GAME RESULT BANNER (Replaces Modal) --- */
+        /* --- RETRO PIXEL BATTLE TRANSITION (Now inside card-wrapper) --- */
+        .battle-transition {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            z-index: 20; /* Sits above the card image */
+            pointer-events: none;
+        }
+        .pixel-block {
+            background-color: #1A1A1A; 
+            opacity: 0;
+        }
+        .pixel-block.active {
+            opacity: 1;
+        }
+
+        /* --- CONTROLS AREA --- */
+        .controls-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        /* --- IN-GAME RESULT BANNER (Now overlays the buttons) --- */
         .result-banner {
             position: absolute;
-            top: 50%; left: 0; right: 0;
-            transform: translateY(-50%) scale(0.8);
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(26, 26, 26, 0.95);
-            border-top: 4px solid var(--poke-yellow);
-            border-bottom: 4px solid var(--poke-yellow);
-            padding: 15px 10px;
-            text-align: center;
+            border: 4px solid var(--poke-yellow);
+            border-radius: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             opacity: 0;
             pointer-events: none;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.8);
             z-index: 10;
             backdrop-filter: blur(4px);
         }
 
         .result-banner.show {
             opacity: 1;
-            transform: translateY(-50%) scale(1);
+            transform: scale(1);
+            pointer-events: auto; /* Catch clicks if needed */
         }
 
         .result-title {
@@ -232,24 +260,6 @@
         
         .hint-btn:active:not(:disabled) { box-shadow: 0 0px 0 #cccccc; }
 
-        /* --- RETRO PIXEL BATTLE TRANSITION --- */
-        .battle-transition {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            z-index: 9999;
-            pointer-events: none;
-        }
-        .pixel-block {
-            background-color: #1A1A1A; /* Very dark grey/black */
-            opacity: 0;
-        }
-        .pixel-block.active {
-            opacity: 1;
-        }
-
         /* --- INFO SETTINGS MODAL --- */
         .modal-overlay {
             position: fixed;
@@ -295,8 +305,6 @@
 </head>
 <body>
 
-<div id="battleTransition" class="battle-transition"></div>
-
 <div class="app-banner">
     <h1 class="app-title">What's that<br>Pokémon Card?</h1>
     <div class="settings-icon" onclick="openInfoModal()">⚙️</div>
@@ -311,19 +319,22 @@
     </div>
 
     <div class="card-wrapper">
+        <div id="battleTransition" class="battle-transition"></div>
         <img id="cardImage" class="mystery-card" alt="Mystery Card" style="opacity: 0;">
-        
+    </div>
+
+    <div class="controls-wrapper">
         <div id="resultBanner" class="result-banner">
             <h2 id="resultTitle" class="result-title">CORRECT!</h2>
             <p id="resultMessage" class="result-message">+175 Pts</p>
         </div>
-    </div>
 
-    <div class="options-grid" id="optionsContainer">
-        <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Cards...</p>
-    </div>
+        <div class="options-grid" id="optionsContainer">
+            <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Cards...</p>
+        </div>
 
-    <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (-5 Secs)</button>
+        <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (-5 Secs)</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="infoModal">
@@ -400,14 +411,12 @@
     const numBlocks = 100;
     let snakeOrder = [];
     
-    // Generate the 100 blocks
     for(let i = 0; i < numBlocks; i++) {
         let block = document.createElement('div');
         block.className = 'pixel-block';
         transitionEl.appendChild(block);
     }
     
-    // Calculate the "Snake" pattern (Row 1: L->R, Row 2: R->L, etc.)
     for (let r = 0; r < 10; r++) {
         if (r % 2 === 0) {
             for (let c = 0; c < 10; c++) snakeOrder.push(r * 10 + c);
@@ -428,9 +437,8 @@
                         pixelBlocks[index].classList.remove('active');
                     }
                 }, delay);
-                delay += 8; // Super fast block animation
+                delay += 8; 
             });
-            // Resolve promise when all blocks have animated + small buffer
             setTimeout(resolve, delay + 100);
         });
     }
@@ -485,7 +493,6 @@
         cardImage.style.transition = 'none';
         cardImage.className = 'mystery-card hint-0';
         
-        // When the new image loads...
         cardImage.onload = () => {
             void cardImage.offsetWidth;
             cardImage.style.transition = 'clip-path 0.5s ease, filter 0.5s ease, opacity 0.3s ease';
@@ -503,7 +510,6 @@
                 optionsContainer.appendChild(btn);
             });
 
-            // "Un-wipe" the snake transition to reveal the new round!
             animateSnake(false);
 
             clearInterval(timerInterval);
@@ -581,26 +587,17 @@
 
         updateUI();
 
-        // Show the in-game overlay banner
         resultTitle.innerText = isWin ? "CORRECT!" : "INCORRECT!";
         resultTitle.style.color = isWin ? "#4CAF50" : "var(--poke-red)";
         resultMessage.innerText = message;
         resultBanner.classList.add('show');
 
-        // Let player see the full card and score for a moment
         setTimeout(async () => {
-            // Trigger the Retro Snake Wipe!
             await animateSnake(true);
-            
-            // Hide the banner while screen is black
             resultBanner.classList.remove('show');
-            
-            // Remove played card and start next round
             cardPool = cardPool.filter(c => c.id !== currentCard.id);
             startRound(); 
-            // (Note: startRound handles the un-wipe once the image loads)
-
-        }, 2500); // 2.5 seconds to admire the art before wiping
+        }, 2500); 
     }
 
     function openInfoModal() { infoModal.style.display = "flex"; }
