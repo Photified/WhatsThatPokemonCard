@@ -5,21 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What's that Pokémon Card?</title>
     <link rel="manifest" href="manifest.json">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- POKÉMON COLOR THEME --- */
+        /* --- POKÉMON COLOR THEME & VARIABLES --- */
         :root {
-            --poke-red: #EE1515;
-            --poke-blue: #3B4CCA;
-            --poke-yellow: #FFDE00;
-            --poke-dark: #222224;
+            --poke-red: #E3350D;
+            --poke-blue: #3164B5;
+            --poke-yellow: #FFCB05;
+            --poke-yellow-dark: #C7A008;
+            --poke-dark: #1A1A1A;
             --pos-x: 50%;
             --pos-y: 50%;
         }
 
         body {
-            background-color: var(--poke-blue);
+            /* Nice radial gradient for the background */
+            background: radial-gradient(circle at top center, #417BDB, var(--poke-blue));
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Outfit', sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -31,29 +38,30 @@
 
         /* --- APP BANNER --- */
         .app-banner {
-            background-color: var(--poke-blue);
+            background-color: var(--poke-red);
             border: 4px solid var(--poke-yellow);
-            border-radius: 10px;
-            padding: 10px 20px;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            padding: 12px 20px;
+            margin-bottom: 25px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             box-sizing: border-box;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 0 var(--poke-dark), 0 10px 20px rgba(0,0,0,0.4);
         }
 
         .app-title {
-            font-size: 1.2rem;
-            font-weight: 900;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
             color: var(--poke-yellow);
-            text-shadow: 2px 2px 0px var(--poke-dark);
+            text-shadow: 2px 2px 0px var(--poke-dark), -1px -1px 0px var(--poke-dark), 1px -1px 0px var(--poke-dark), -1px 1px 0px var(--poke-dark);
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: left;
+            letter-spacing: 1.5px;
+            line-height: 1.1;
         }
 
         /* --- COGWHEEL ICON --- */
@@ -61,54 +69,74 @@
             font-size: 1.8rem;
             cursor: pointer;
             color: white;
-            transition: transform 0.2s;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             line-height: 1;
+            text-shadow: 2px 2px 0px var(--poke-dark);
         }
-        .settings-icon:hover { transform: rotate(90deg); color: var(--poke-yellow); }
+        .settings-icon:hover { transform: rotate(90deg) scale(1.1); color: var(--poke-yellow); }
 
         /* --- GAME BOARD --- */
         .game-board {
-            background-color: var(--poke-red);
+            background-color: var(--poke-blue);
             border: 5px solid var(--poke-yellow);
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 20px;
+            padding: 20px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             box-sizing: border-box;
-            text-align: center;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 0 var(--poke-dark), 0 15px 30px rgba(0,0,0,0.5);
             position: relative;
         }
 
+        /* --- STATS PILLS --- */
         .stats {
             display: flex;
             justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-pill {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-value {
             color: var(--poke-yellow);
-            text-shadow: 1px 1px 2px black;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 0px black;
         }
 
         /* --- THE FLASHLIGHT EFFECT --- */
-        .card-container {
+        .card-wrapper {
             background-color: var(--poke-dark);
             width: 250px;
             height: 350px;
             margin: 0 auto 20px auto;
-            border-radius: 10px;
-            border: 3px solid white;
-            overflow: hidden;
+            border-radius: 12px;
+            border: 4px solid white;
+            box-shadow: inset 0 0 20px black, 0 5px 15px rgba(0,0,0,0.4);
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
         .mystery-card {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: clip-path 0.5s ease, filter 0.5s ease;
+            border-radius: 8px; /* Matches inner boundary */
+            /* Transitions are handled dynamically in JS to prevent the flash! */
         }
 
         /* Dynamic Hint Classes */
@@ -117,42 +145,65 @@
         .hint-2 { clip-path: circle(25% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-3 { clip-path: circle(100% at 50% 50%); filter: grayscale(0%); }
 
-        /* --- BUTTONS --- */
+        /* --- TACTILE BUTTONS --- */
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 15px;
         }
 
         button {
             background-color: var(--poke-yellow);
-            color: var(--poke-blue);
-            border: 2px solid white;
-            padding: 12px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            border-radius: 8px;
+            color: var(--poke-dark);
+            border: 3px solid white;
+            padding: 14px 10px;
+            font-size: 0.95rem;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.1s;
-            font-family: inherit;
+            transition: all 0.1s ease;
+            box-shadow: 0 5px 0 var(--poke-yellow-dark), 0 5px 5px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        button:active { transform: scale(0.95); }
-        button:hover { background-color: #fff4a3; }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        button:active:not(:disabled) { 
+            transform: translateY(5px); 
+            box-shadow: 0 0px 0 var(--poke-yellow-dark), 0 0px 0px rgba(0,0,0,0);
+        }
+        
+        button:hover:not(:disabled) { 
+            background-color: #ffe04d; 
+        }
+        
+        button:disabled { 
+            background-color: #cccccc;
+            border-color: #999;
+            color: #666;
+            box-shadow: 0 5px 0 #999;
+            cursor: not-allowed; 
+            transform: none;
+        }
         
         .hint-btn {
             background-color: white;
             color: var(--poke-red);
+            box-shadow: 0 5px 0 #cccccc, 0 5px 5px rgba(0,0,0,0.3);
             width: 100%;
         }
+        
+        .hint-btn:active:not(:disabled) {
+            box-shadow: 0 0px 0 #cccccc;
+        }
 
-        /* --- MODALS --- */
+        /* --- BEAUTIFIED MODALS --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -161,22 +212,56 @@
 
         .modal-content {
             background-color: var(--poke-blue);
-            border: 4px solid var(--poke-yellow);
-            border-radius: 15px;
-            padding: 20px;
-            width: 80%;
-            max-width: 350px;
+            border: 5px solid var(--poke-yellow);
+            border-radius: 20px;
+            width: 85%;
+            max-width: 360px;
             text-align: center;
             color: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 0 var(--poke-dark), 0 20px 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .modal-content h2 { margin-top: 0; color: var(--poke-yellow); }
-        .modal-content p { margin-bottom: 20px; line-height: 1.4; }
-        .modal-content button { width: 100%; margin-top: 10px; }
-        
-        #installBtn { display: none; background-color: #4CAF50; color: white; border-color: #fff; }
-        #installBtn:hover { background-color: #45a049; }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            background-color: var(--poke-red);
+            padding: 15px;
+            border-bottom: 4px solid var(--poke-yellow);
+        }
+
+        .modal-header h2 { 
+            margin: 0; 
+            font-family: 'Fredoka', sans-serif;
+            color: white; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px var(--poke-dark);
+        }
+
+        .modal-body {
+            padding: 25px 20px;
+            font-size: 1.1rem;
+        }
+
+        .modal-body p { margin: 0 0 20px 0; line-height: 1.5; }
+        .modal-body b { color: var(--poke-yellow); font-size: 1.2rem; }
+        .modal-body .btn-container { display: flex; flex-direction: column; gap: 12px; }
+
+        /* Install app button specific styling */
+        #installBtn { 
+            display: none; 
+            background-color: #4CAF50; 
+            color: white; 
+            border-color: white; 
+            box-shadow: 0 5px 0 #2E7D32;
+        }
+        #installBtn:active:not(:disabled) { box-shadow: 0 0px 0 #2E7D32; }
+
     </style>
 </head>
 <body>
@@ -188,38 +273,52 @@
 
 <div class="game-board">
     <div class="stats">
-        <div>Score: <span id="scoreEl">0</span></div>
-        <div>Time: <span id="timeEl">15</span>s</div>
+        <div class="stat-pill">Score: <span class="stat-value" id="scoreEl">0</span></div>
+        <div class="stat-pill">Time: <span class="stat-value" id="timeEl">15</span>s</div>
     </div>
 
-    <div class="card-container">
-        <img id="cardImage" class="mystery-card hint-0" src="https://via.placeholder.com/250x350/222224/FFFFFF?text=Loading..." alt="Mystery Card">
+    <div class="card-wrapper">
+        <img id="cardImage" class="mystery-card" alt="Mystery Card" style="opacity: 0;">
     </div>
 
-    <div class="options-grid" id="optionsContainer"></div>
+    <div class="options-grid" id="optionsContainer">
+        <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Cards...</p>
+    </div>
 
-    <button class="hint-btn" id="hintBtn" onclick="useHint()">Use Hint (Costs 25 Pts)</button>
+    <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (Costs 25 Pts)</button>
 </div>
 
 <div class="modal-overlay" id="resultModal">
     <div class="modal-content">
-        <h2 id="resultTitle">Result</h2>
-        <p id="resultMessage">Message goes here.</p>
-        <button onclick="closeResultAndNext()">Next Card</button>
+        <div class="modal-header" id="resultHeader">
+            <h2 id="resultTitle">Result</h2>
+        </div>
+        <div class="modal-body">
+            <p id="resultMessage">Message goes here.</p>
+            <div class="btn-container">
+                <button onclick="closeResultAndNext()">Next Card</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="infoModal">
     <div class="modal-content">
-        <h2>How to Play</h2>
-        <p>Guess the Pokémon card from the small art snippet!<br><br>
-        • Correct: +100 Pts<br>
-        • Time left: +5 Pts/sec<br>
-        • Hints: -25 Pts each<br>
-        (Using a hint reveals more of the card)</p>
-        
-        <button id="installBtn">Install App</button>
-        <button class="hint-btn" onclick="closeInfoModal()">Close</button>
+        <div class="modal-header">
+            <h2>How to Play</h2>
+        </div>
+        <div class="modal-body">
+            <p>Guess the Pokémon card from the small art snippet!</p>
+            <p style="font-size: 0.95rem; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+                ✅ <b>Correct:</b> +100 Pts<br>
+                ⏱️ <b>Time left:</b> +5 Pts/sec<br>
+                🔍 <b>Hints:</b> -25 Pts each
+            </p>
+            <div class="btn-container">
+                <button id="installBtn">📲 Install App</button>
+                <button class="hint-btn" onclick="closeInfoModal()">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -227,9 +326,7 @@
     // --- PWA SETUP ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker Registered'))
-                .catch(err => console.error('Service Worker Error', err));
+            navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Error', err));
         });
     }
 
@@ -268,6 +365,7 @@
     const hintBtn = document.getElementById('hintBtn');
     
     const resultModal = document.getElementById('resultModal');
+    const resultHeader = document.getElementById('resultHeader');
     const resultTitle = document.getElementById('resultTitle');
     const resultMessage = document.getElementById('resultMessage');
     const infoModal = document.getElementById('infoModal');
@@ -280,10 +378,7 @@
         
         try {
             const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}`);
-            
-            if (!res.ok) {
-                throw new Error(`API returned status: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
 
             const data = await res.json();
             cardPool = data.data.filter(card => card.images && card.images.large); 
@@ -291,12 +386,11 @@
             if(cardPool.length >= 4) {
                 startRound();
             } else {
-                throw new Error("API returned too few valid cards.");
+                throw new Error("Too few valid cards.");
             }
-
         } catch (error) {
             console.error("Fetch Error:", error);
-            optionsContainer.innerHTML = `<p style="grid-column: span 2; font-size: 0.9rem; margin-top: 10px;"><b>Error:</b> ${error.message}<br><br>If this says "Failed to fetch", it's usually an AdBlocker blocking the API. Try turning it off for this page.</p>`;
+            optionsContainer.innerHTML = `<p style="grid-column: span 2; font-size: 0.9rem;"><b>Error:</b> ${error.message}<br><br>Please refresh or disable AdBlock.</p>`;
         }
     }
 
@@ -311,33 +405,49 @@
         hintLevel = 0;
         timeLeft = 15;
         
+        // Pick random coords for flashlight
         const randX = Math.floor(Math.random() * 50) + 25;
         const randY = Math.floor(Math.random() * 50) + 25;
         document.documentElement.style.setProperty('--pos-x', `${randX}%`);
         document.documentElement.style.setProperty('--pos-y', `${randY}%`);
 
-        cardImage.className = 'mystery-card hint-0';
-        hintBtn.disabled = false;
-        hintBtn.innerText = "Use Hint (Costs 25 Pts)";
         updateUI();
 
         let shuffledPool = [...cardPool].sort(() => 0.5 - Math.random());
         let roundCards = shuffledPool.slice(0, 4);
-        
         currentCard = roundCards[0];
+
+        // HOW WE FIX THE FLASH: Hide the image, remove animations, set class, then fade in on load
+        cardImage.style.opacity = 0;
+        cardImage.style.transition = 'none';
+        cardImage.className = 'mystery-card hint-0';
+        
+        cardImage.onload = () => {
+            // Force browser to register the non-transitioned state
+            void cardImage.offsetWidth;
+            // Turn transitions back on and fade it in
+            cardImage.style.transition = 'clip-path 0.5s ease, filter 0.5s ease, opacity 0.3s ease';
+            cardImage.style.opacity = 1;
+            
+            hintBtn.disabled = false;
+            hintBtn.innerText = "Use Hint (Costs 25 Pts)";
+            
+            // Render buttons only after image is loaded
+            let options = [...roundCards].sort(() => 0.5 - Math.random());
+            optionsContainer.innerHTML = '';
+            options.forEach(optionCard => {
+                const btn = document.createElement('button');
+                btn.innerText = optionCard.name;
+                btn.onclick = () => checkAnswer(optionCard.name);
+                optionsContainer.appendChild(btn);
+            });
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(handleTimer, 1000);
+        };
+        
+        // This triggers the onload event above
         cardImage.src = currentCard.images.large;
-
-        let options = [...roundCards].sort(() => 0.5 - Math.random());
-        optionsContainer.innerHTML = '';
-        options.forEach(optionCard => {
-            const btn = document.createElement('button');
-            btn.innerText = optionCard.name;
-            btn.onclick = () => checkAnswer(optionCard.name);
-            optionsContainer.appendChild(btn);
-        });
-
-        clearInterval(timerInterval);
-        timerInterval = setInterval(handleTimer, 1000);
     }
 
     function useHint() {
@@ -384,8 +494,8 @@
 
         setTimeout(() => {
             resultTitle.innerText = isWin ? "Correct!" : "Game Over";
-            resultTitle.style.color = isWin ? "#4CAF50" : "var(--poke-red)";
-            resultMessage.innerHTML = `${message}<br><br>The card was: <b>${currentCard.name}</b>`;
+            resultHeader.style.backgroundColor = isWin ? "#4CAF50" : "var(--poke-red)";
+            resultMessage.innerHTML = `${message}<br><br>The card was:<br><b>${currentCard.name}</b>`;
             resultModal.style.display = "flex";
         }, 1200);
     }
@@ -393,13 +503,16 @@
     function closeResultAndNext() {
         resultModal.style.display = "none";
         cardPool = cardPool.filter(c => c.id !== currentCard.id);
+        
+        // Show loading text while next image prepares
+        optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Next Card...</p>`;
+        
         startRound();
     }
 
     function openInfoModal() { infoModal.style.display = "flex"; }
     function closeInfoModal() { infoModal.style.display = "none"; }
 
-    // --- MISSING FUNCTION RESTORED ---
     function updateUI() {
         scoreEl.innerText = score;
         timeEl.innerText = timeLeft;
