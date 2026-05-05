@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's that Pokémon Card?</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* --- POKÉMON COLOR THEME --- */
+        :root {
+            --poke-red: #EE1515;
+            --poke-blue: #3B4CCA;
+            --poke-yellow: #FFDE00;
+            --poke-dark: #222224;
+            --pos-x: 50%;
+            --pos-y: 50%;
+        }
+
+        body {
+            background-color: var(--poke-blue);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; 
+        }
+
+        .game-board {
+            background-color: var(--poke-red);
+            border: 5px solid var(--poke-yellow);
+            border-radius: 15px;
+            padding: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        /* --- APP BANNER --- */
+        .app-banner {
+            background-color: var(--poke-blue);
+            border: 3px solid var(--poke-yellow);
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--poke-yellow);
+            text-shadow: 2px 2px 0px var(--poke-dark);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- COGWHEEL ICON --- */
+        .settings-icon {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s;
+            line-height: 1;
+        }
+        .settings-icon:hover { transform: rotate(90deg); color: var(--poke-yellow); }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--poke-yellow);
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* --- THE FLASHLIGHT EFFECT --- */
+        .card-container {
+            background-color: var(--poke-dark);
+            width: 250px;
+            height: 350px;
+            margin: 0 auto 20px auto;
+            border-radius: 10px;
+            border: 3px solid white;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mystery-card {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: clip-path 0.5s ease, filter 0.5s ease;
+        }
+
+        /* Dynamic Hint Classes */
+        .hint-0 { clip-path: circle(8% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
+        .hint-1 { clip-path: circle(15% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
+        .hint-2 { clip-path: circle(25% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
+        .hint-3 { clip-path: circle(100% at 50% 50%); filter: grayscale(0%); }
+
+        /* --- BUTTONS --- */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: var(--poke-yellow);
+            color: var(--poke-blue);
+            border: 2px solid white;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-family: inherit;
+        }
+
+        button:active { transform: scale(0.95); }
+        button:hover { background-color: #fff4a3; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .hint-btn {
+            background-color: white;
+            color: var(--poke-red);
+            width: 100%;
+        }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--poke-blue);
+            border: 4px solid var(--poke-yellow);
+            border-radius: 15px;
+            padding: 20px;
+            width: 80%;
+            max-width: 350px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .modal-content h2 { margin-top: 0; color: var(--poke-yellow); }
+        .modal-content p { margin-bottom: 20px; line-height: 1.4; }
+        .modal-content button { width: 100%; margin-top: 10px; }
+        
+        #installBtn { display: none; background-color: #4CAF50; color: white; border-color: #fff; }
+        #installBtn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+
+<div class="game-board">
+    
+    <div class="app-banner">
+        <h1 class="app-title">What's that<br>Pokémon Card?</h1>
+        <div class="settings-icon" onclick="openInfoModal()">⚙️</div>
+    </div>
+    
+    <div class="stats">
+        <div>Score: <span id="scoreEl">0</span></div>
+        <div>Time: <span id="timeEl">15</span>s</div>
+    </div>
+
+    <div class="card-container">
+        <img id="cardImage" class="mystery-card hint-0" src="https://via.placeholder.com/250x350/222224/FFFFFF?text=Loading..." alt="Mystery Card">
+    </div>
+
+    <div class="options-grid" id="optionsContainer"></div>
+
+    <button class="hint-btn" id="hintBtn" onclick="useHint()">Use Hint (Costs 25 Pts)</button>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-content">
+        <h2 id="resultTitle">Result</h2>
+        <p id="resultMessage">Message goes here.</p>
+        <button onclick="closeResultAndNext()">Next Card</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+    <div class="modal-content">
+        <h2>How to Play</h2>
+        <p>Guess the Pokémon card from the small art snippet!<br><br>
+        • Correct: +100 Pts<br>
+        • Time left: +5 Pts/sec<br>
+        • Hints: -25 Pts each<br>
+        (Using a hint reveals more of the card)</p>
+        
+        <button id="installBtn">Install App</button>
+        <button class="hint-btn" onclick="closeInfoModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    // --- API CONFIGURATION ---
+    const API_KEY = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f";
+
+    // --- PWA SETUP ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.error('Service Worker Error', err));
+        });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBtn').style.display = 'block';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+
+    // --- GAME STATE ---
+    let cardPool = [];
+    let currentCard = null;
+    let hintLevel = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timerInterval;
+    let isRoundActive = false;
+
+    // --- DOM ELEMENTS ---
+    const cardImage = document.getElementById('cardImage');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const scoreEl = document.getElementById('scoreEl');
+    const timeEl = document.getElementById('timeEl');
+    const hintBtn = document.getElementById('hintBtn');
+    
+    // Modal Elements
+    const resultModal = document.getElementById('resultModal');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultMessage = document.getElementById('resultMessage');
+    const infoModal = document.getElementById('infoModal');
+
+    // --- INITIALIZATION ---
+    async function initGame() {
+        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra"';
+        const encodedQuery = encodeURIComponent(rawQuery);
+        const randomPage = Math.floor(Math.random() * 3) + 1; 
+        
+        try {
+            // Added the API key to the headers of the request
+            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}`, {
+                headers: {
+                    "X-Api-Key": API_KEY
+                }
+            });
+            
+            if (!res.ok) {
+                throw new Error(`API Error: ${res.status}`);
+            }
+
+            const data = await res.json();
+            cardPool = data.data.filter(card => card.images && card.images.large); 
+            
+            if(cardPool.length >= 4) {
+                startRound();
+            } else {
+                throw new Error("Not enough cards returned.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            optionsContainer.innerHTML = `<p style="grid-column: span 2;">Failed to load cards. Please refresh the page.</p>`;
+        }
+    }
+
+    // --- GAME LOGIC ---
+    function startRound() {
+        if (cardPool.length < 4) {
+            initGame(); // Fetch more if we run low
+            return;
+        }
+
+        isRoundActive = true;
+        hintLevel = 0;
+        timeLeft = 15;
+        
+        const randX = Math.floor(Math.random() * 50) + 25;
+        const randY = Math.floor(Math.random() * 50) + 25;
+        document.documentElement.style.setProperty('--pos-x', `${randX}%`);
+        document.documentElement.style.setProperty('--pos-y', `${randY}%`);
+
+        cardImage.className = 'mystery-card hint-0';
+        hintBtn.disabled = false;
+        hintBtn.innerText = "Use Hint (Costs 25 Pts)";
+        updateUI();
+
+        let shuffledPool = [...cardPool].sort(() => 0.5 - Math.random());
+        let roundCards = shuffledPool.slice(0, 4);
+        
+        currentCard = roundCards[0];
+        cardImage.src = currentCard.images.large;
+
+        let options = [...roundCards].sort(() => 0.5 - Math.random());
+        optionsContainer.innerHTML = '';
+        options.forEach(optionCard => {
+            const btn = document.createElement('button');
+            btn.innerText = optionCard.name;
+            btn.onclick = () => checkAnswer(optionCard.name);
+            optionsContainer.appendChild(btn);
+        });
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(handleTimer, 1000);
+    }
+
+    function useHint() {
+        if (hintLevel < 3 && isRoundActive) {
+            hintLevel++;
+            cardImage.className = `mystery-card hint-${hintLevel}`;
+            if (hintLevel === 3) {
+                hintBtn.disabled = true;
+                hintBtn.innerText = "Max Hints Used";
+            }
+        }
+    }
+
+    function handleTimer() {
+        timeLeft--;
+        updateUI();
+        if (timeLeft <= 0) {
+            endRound(false, "Time's up!");
+        }
+    }
+
+    function checkAnswer(selectedName) {
+        if (!isRoundActive) return;
+        if (selectedName === currentCard.name) {
+            let pointsEarned = 100 + (timeLeft * 5) - (hintLevel * 25);
+            pointsEarned = Math.max(10, pointsEarned); // min 10 points
+            score += pointsEarned;
+            endRound(true, `You earned ${pointsEarned} points!`);
+        } else {
+            endRound(false, `Incorrect!`);
+        }
+    }
+
+    function endRound(isWin, message) {
+        isRoundActive = false;
+        clearInterval(timerInterval);
+        cardImage.className = 'mystery-card hint-3'; 
+        
+        const btns = optionsContainer.querySelectorAll('button');
+        btns.forEach(btn => btn.disabled = true);
+        hintBtn.disabled = true;
+
+        updateUI();
+
+        setTimeout(() => {
+            resultTitle.innerText = isWin ? "Correct!" : "Game Over";
+            resultTitle.style.color = isWin ? "#4CAF50" : "var(--poke-red)";
+            resultMessage.innerHTML = `${message}<br><br>The card was: <b>${currentCard.name}</b>`;
+            resultModal.style.display = "flex";
+        }, 1200);
+    }
+
+    function closeResultAndNext() {
+        resultModal.style.display = "none";
+        cardPool = cardPool.filter(c => c.id !== currentCard.id);
+        startRound();
+    }
+
+    function openInfoModal() { infoModal.style.display = "flex"; }
+    function closeInfoModal() { infoModal.style.display = "none"; }
+
+    initGame();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Who's That Art?",
+  "short_name": "PokeArt",
+  "description": "A Pokémon TCG art guessing game.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#3B4CCA",
+  "theme_color": "#EE1515",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ]
+}
