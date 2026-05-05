@@ -21,7 +21,7 @@
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column; /* Stack the banner and board vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -29,15 +29,15 @@
             overflow: hidden; 
         }
 
-        /* --- APP BANNER (Moved outside the red area) --- */
+        /* --- APP BANNER --- */
         .app-banner {
             background-color: var(--poke-blue);
             border: 4px solid var(--poke-yellow);
             border-radius: 10px;
             padding: 10px 20px;
-            margin-bottom: 20px; /* Space between banner and board */
+            margin-bottom: 20px;
             width: 90%;
-            max-width: 400px; /* Matches the board width */
+            max-width: 400px;
             box-sizing: border-box;
             display: flex;
             justify-content: space-between;
@@ -279,7 +279,6 @@
         const randomPage = Math.floor(Math.random() * 3) + 1; 
         
         try {
-            // REMOVED custom header to prevent browser CORS block
             const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}`);
             
             if (!res.ok) {
@@ -297,7 +296,6 @@
 
         } catch (error) {
             console.error("Fetch Error:", error);
-            // Prints the exact error reason to the screen
             optionsContainer.innerHTML = `<p style="grid-column: span 2; font-size: 0.9rem; margin-top: 10px;"><b>Error:</b> ${error.message}<br><br>If this says "Failed to fetch", it's usually an AdBlocker blocking the API. Try turning it off for this page.</p>`;
         }
     }
@@ -400,6 +398,12 @@
 
     function openInfoModal() { infoModal.style.display = "flex"; }
     function closeInfoModal() { infoModal.style.display = "none"; }
+
+    // --- MISSING FUNCTION RESTORED ---
+    function updateUI() {
+        scoreEl.innerText = score;
+        timeEl.innerText = timeLeft;
+    }
 
     initGame();
 </script>
