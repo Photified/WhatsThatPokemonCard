@@ -28,43 +28,46 @@
             font-family: 'Outfit', sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* Use dvh to perfectly fit mobile screens including address bars */
+            height: 100dvh; 
             margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
             overflow: hidden; 
         }
 
         /* --- APP BANNER --- */
         .app-banner {
             background-color: var(--poke-red);
-            border: 4px solid var(--poke-yellow);
-            border-radius: 16px;
-            padding: 12px 20px;
-            margin-bottom: 25px;
-            width: 90%;
+            border: 3px solid var(--poke-yellow);
+            border-radius: 12px;
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            width: 100%;
             max-width: 420px;
             box-sizing: border-box;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 6px 0 var(--poke-dark), 0 10px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 0 var(--poke-dark), 0 8px 15px rgba(0,0,0,0.3);
+            flex-shrink: 0; /* Prevents banner from shrinking */
         }
 
         .app-title {
             font-family: 'Fredoka', sans-serif;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--poke-yellow);
             text-shadow: 2px 2px 0px var(--poke-dark), -1px -1px 0px var(--poke-dark), 1px -1px 0px var(--poke-dark), -1px 1px 0px var(--poke-dark);
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             line-height: 1.1;
         }
 
         .settings-icon {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             cursor: pointer;
             color: white;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -73,34 +76,40 @@
         }
         .settings-icon:hover { transform: rotate(90deg) scale(1.1); color: var(--poke-yellow); }
 
-        /* --- GAME BOARD --- */
+        /* --- GAME BOARD (Now a Flex Column) --- */
         .game-board {
             background-color: var(--poke-blue);
-            border: 5px solid var(--poke-yellow);
-            border-radius: 20px;
-            padding: 20px;
-            width: 90%;
+            border: 4px solid var(--poke-yellow);
+            border-radius: 16px;
+            padding: 12px;
+            width: 100%;
             max-width: 420px;
             box-sizing: border-box;
-            box-shadow: 0 8px 0 var(--poke-dark), 0 15px 30px rgba(0,0,0,0.5);
-            position: relative;
+            box-shadow: 0 6px 0 var(--poke-dark), 0 10px 20px rgba(0,0,0,0.4);
+            
+            /* Flex properties to fill remaining vertical space */
+            display: flex;
+            flex-direction: column;
+            flex: 1; 
+            min-height: 0; /* Crucial for nested flexbox shrinking */
         }
 
         /* --- STATS GRID --- */
         .stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
         .stat-pill {
             background-color: rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 30px;
             font-family: 'Fredoka', sans-serif;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 700;
             color: white;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
@@ -113,18 +122,29 @@
         
         .stat-value {
             color: var(--poke-yellow);
-            font-size: 1.1rem;
+            font-size: 1rem;
             text-shadow: 1px 1px 0px black;
+        }
+
+        /* --- FLEXIBLE SCALING CARD CONTAINER --- */
+        .card-scale-container {
+            flex: 1; /* Takes up all available space between stats and buttons */
+            min-height: 0; /* Allows it to shrink smaller than its content if needed */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+            width: 100%;
         }
 
         /* --- THE FLASHLIGHT EFFECT --- */
         .card-wrapper {
             background-color: var(--poke-dark);
-            width: 250px;
-            height: 350px;
-            margin: 0 auto 20px auto;
+            height: 100%;
+            max-height: 380px; /* Stops it from getting comically large on tall screens */
+            aspect-ratio: 2.5 / 3.5; /* Locks the exact proportions of a Pokémon card! */
             border-radius: 12px;
-            border: 4px solid white;
+            border: 3px solid white;
             box-shadow: inset 0 0 20px black, 0 5px 15px rgba(0,0,0,0.4);
             display: flex;
             justify-content: center;
@@ -140,12 +160,12 @@
             border-radius: 8px; 
         }
 
-        /* Dynamic Hint Classes - Updated Hint 3 and added Full Reveal */
+        /* Dynamic Hint Classes */
         .hint-0 { clip-path: circle(8% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-1 { clip-path: circle(15% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-2 { clip-path: circle(25% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
-        .hint-3 { clip-path: circle(40% at var(--pos-x) var(--pos-y)); filter: grayscale(0%); } /* Larger circle, colored, but not full */
-        .reveal-full { clip-path: circle(150% at 50% 50%); filter: grayscale(0%); } /* Shows the whole card */
+        .hint-3 { clip-path: circle(40% at var(--pos-x) var(--pos-y)); filter: grayscale(0%); }
+        .reveal-full { clip-path: circle(150% at 50% 50%); filter: grayscale(0%); }
 
         /* --- RETRO PIXEL BATTLE TRANSITION --- */
         .battle-transition {
@@ -169,6 +189,7 @@
         .controls-wrapper {
             position: relative;
             width: 100%;
+            flex-shrink: 0; /* Prevents buttons from squishing */
         }
 
         /* --- IN-GAME RESULT BANNER --- */
@@ -176,8 +197,8 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(26, 26, 26, 0.95);
-            border: 4px solid var(--poke-yellow);
-            border-radius: 12px;
+            border: 3px solid var(--poke-yellow);
+            border-radius: 10px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -199,45 +220,48 @@
 
         .result-title {
             font-family: 'Fredoka', sans-serif;
-            font-size: 1.8rem;
-            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+            margin: 0 0 2px 0;
             text-transform: uppercase;
             text-shadow: 2px 2px 0px black;
         }
 
         .result-message {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin: 0;
             color: white;
             font-weight: 700;
         }
 
-        /* --- TACTILE BUTTONS --- */
+        /* --- SLIMMED TACTILE BUTTONS --- */
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 10px;
         }
 
         button {
             background-color: var(--poke-yellow);
             color: var(--poke-dark);
-            border: 3px solid white;
-            padding: 14px 10px;
-            font-size: 0.95rem;
+            border: 2px solid white; /* Thinner borders */
+            padding: 8px 4px; /* Reduced vertical padding */
+            font-size: 0.85rem; /* Smaller text to fit long names */
             font-family: 'Fredoka', sans-serif;
             font-weight: 700;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.1s ease;
-            box-shadow: 0 5px 0 var(--poke-yellow-dark), 0 5px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 0 var(--poke-yellow-dark), 0 4px 4px rgba(0,0,0,0.3);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0px;
+            white-space: nowrap; /* Forces text to stay on one line */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adds '...' if the name is too long */
         }
 
         button:active:not(:disabled) { 
-            transform: translateY(5px); 
+            transform: translateY(4px); 
             box-shadow: 0 0px 0 var(--poke-yellow-dark), 0 0px 0px rgba(0,0,0,0);
         }
         
@@ -247,7 +271,7 @@
             background-color: #cccccc;
             border-color: #999;
             color: #666;
-            box-shadow: 0 5px 0 #999;
+            box-shadow: 0 4px 0 #999;
             cursor: not-allowed; 
             transform: none;
         }
@@ -255,8 +279,10 @@
         .hint-btn {
             background-color: white;
             color: var(--poke-red);
-            box-shadow: 0 5px 0 #cccccc, 0 5px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 0 #cccccc, 0 4px 4px rgba(0,0,0,0.3);
             width: 100%;
+            padding: 10px; /* Slightly taller for the main action button */
+            font-size: 0.9rem;
         }
         
         .hint-btn:active:not(:disabled) { box-shadow: 0 0px 0 #cccccc; }
@@ -275,13 +301,13 @@
 
         .modal-content {
             background-color: var(--poke-blue);
-            border: 5px solid var(--poke-yellow);
-            border-radius: 20px;
+            border: 4px solid var(--poke-yellow);
+            border-radius: 16px;
             width: 85%;
-            max-width: 360px;
+            max-width: 340px;
             text-align: center;
             color: white;
-            box-shadow: 0 10px 0 var(--poke-dark), 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 0 var(--poke-dark), 0 20px 40px rgba(0,0,0,0.6);
             overflow: hidden;
             animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -290,18 +316,20 @@
 
         .modal-header {
             background-color: var(--poke-red);
-            padding: 15px;
-            border-bottom: 4px solid var(--poke-yellow);
+            padding: 12px;
+            border-bottom: 3px solid var(--poke-yellow);
         }
 
-        .modal-header h2 { margin: 0; font-family: 'Fredoka', sans-serif; color: white; text-transform: uppercase; text-shadow: 2px 2px 0px var(--poke-dark); }
-        .modal-body { padding: 25px 20px; font-size: 1.1rem; }
-        .modal-body p { margin: 0 0 20px 0; line-height: 1.5; }
-        .modal-body b { color: var(--poke-yellow); font-size: 1.2rem; }
-        .modal-body .btn-container { display: flex; flex-direction: column; gap: 12px; }
+        .modal-header h2 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 1.3rem; color: white; text-transform: uppercase; text-shadow: 2px 2px 0px var(--poke-dark); }
+        .modal-body { padding: 20px 15px; font-size: 1rem; }
+        .modal-body p { margin: 0 0 15px 0; line-height: 1.4; }
+        .modal-body b { color: var(--poke-yellow); font-size: 1.1rem; }
+        .modal-body .btn-container { display: flex; flex-direction: column; gap: 10px; }
 
-        #installBtn { display: none; background-color: #4CAF50; color: white; border-color: white; box-shadow: 0 5px 0 #2E7D32; }
-        #installBtn:active:not(:disabled) { box-shadow: 0 0px 0 #2E7D32; }
+        #installBtn { display: none; background-color: #4CAF50; color: white; border-color: white; box-shadow: 0 4px 0 #2E7D32; padding: 10px;}
+        #installBtn:active:not(:disabled) { box-shadow: 0 0px 0 #2E7D32; transform: translateY(4px); }
+        .modal-body .hint-btn { box-shadow: 0 4px 0 #cccccc; transform: none; }
+        .modal-body .hint-btn:active { box-shadow: 0 0px 0 #cccccc; transform: translateY(4px); }
     </style>
 </head>
 <body>
@@ -319,9 +347,11 @@
         <div class="stat-pill global-stat">Streak: <span class="stat-value" id="streakEl">0</span></div>
     </div>
 
-    <div class="card-wrapper">
-        <div id="battleTransition" class="battle-transition"></div>
-        <img id="cardImage" class="mystery-card" alt="Mystery Card" style="opacity: 0;">
+    <div class="card-scale-container">
+        <div class="card-wrapper">
+            <div id="battleTransition" class="battle-transition"></div>
+            <img id="cardImage" class="mystery-card" alt="Mystery Card" style="opacity: 0;">
+        </div>
     </div>
 
     <div class="controls-wrapper">
@@ -331,7 +361,7 @@
         </div>
 
         <div class="options-grid" id="optionsContainer">
-            <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center;">Loading Cards...</p>
+            <p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center; margin: 10px 0;">Loading Cards...</p>
         </div>
 
         <button class="hint-btn" id="hintBtn" onclick="useHint()" disabled>Use Hint (-5 Secs)</button>
@@ -345,7 +375,7 @@
         </div>
         <div class="modal-body">
             <p>Guess the Pokémon card from the small art snippet!</p>
-            <p style="font-size: 0.95rem; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+            <p style="font-size: 0.9rem; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
                 ✅ <b>Correct:</b> +100 Pts Base<br>
                 ⏱️ <b>Time Bonus:</b> +5 Pts/sec left<br>
                 🔍 <b>Hints:</b> -5 Seconds off Timer<br>
@@ -507,6 +537,8 @@
             options.forEach(optionCard => {
                 const btn = document.createElement('button');
                 btn.innerText = optionCard.name;
+                // Prevents extremely long names from breaking the button layout
+                btn.title = optionCard.name; 
                 btn.onclick = () => checkAnswer(optionCard.name);
                 optionsContainer.appendChild(btn);
             });
