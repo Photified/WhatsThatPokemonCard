@@ -506,13 +506,23 @@
         updateUI(); 
         const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra"';
         const encodedQuery = encodeURIComponent(rawQuery);
-        const randomPage = Math.floor(Math.random() * 3) + 1; 
+        
+        // --- THE FIX ---
+        // Bumping the random multiplier up to 25. 
+        // 25 pages * 50 cards = a pool of 1,250 unique cards!
+        const randomPage = Math.floor(Math.random() * 25) + 1; 
         
         try {
             const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}`);
             if (!res.ok) throw new Error(`API error: ${res.status}`);
 
             const data = await res.json();
+            
+            // Safety check: if we hit a page that is empty or has too few cards, retry
+            if (!data.data || data.data.length < 4) {
+                return initGame(); 
+            }
+
             cardPool = data.data.filter(card => card.images && card.images.large); 
             
             if(cardPool.length >= 4) {
