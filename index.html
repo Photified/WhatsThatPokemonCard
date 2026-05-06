@@ -228,6 +228,8 @@
             margin: 0;
             color: white;
             font-weight: 700;
+            text-align: center;
+            white-space: pre-line;
         }
 
         /* --- SLIMMED TACTILE BUTTONS --- */
@@ -381,8 +383,9 @@
             <p style="font-size: 0.9rem; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
                 ✅ <b>Correct:</b> +100 Pts Base<br>
                 ⏱️ <b>Time Bonus:</b> +5 Pts/sec left<br>
-                🔍 <b>Hints:</b> -5 Seconds off Timer<br>
-                🔥 <b>Streaks:</b> Maintained on correct guesses!
+                ⚡ <b>Fast Guess:</b> +50 Pts (Under 5s, 0 Hints)<br>
+                🔥 <b>Streaks:</b> +20 Pts x Streak Level<br>
+                🔍 <b>Hints:</b> -5 Seconds off Timer
             </p>
             <div class="btn-container">
                 <button id="installBtn">📲 Install App to Home Screen</button>
@@ -603,17 +606,42 @@
         if (!isRoundActive) return;
         if (selectedName === currentCard.name) {
             let pointsEarned = 100 + (timeLeft * 5); 
-            score += pointsEarned;
-            
+
+            // ⚡ Fast Guess Bonus: within the first 5 seconds (timeLeft >= 25) & 0 hints
+            let fastBonus = 0;
+            if (timeLeft >= 25 && hintLevel === 0) {
+                fastBonus = 50;
+                pointsEarned += fastBonus;
+            }
+
             streak++;
             localStorage.setItem('pokeStreak', streak);
+
+            // 🔥 Streak Bonus: +20 points for every consecutive win past the first
+            let streakBonus = 0;
+            if (streak > 1) {
+                streakBonus = (streak - 1) * 20;
+                pointsEarned += streakBonus;
+            }
+
+            score += pointsEarned;
 
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('pokeHighScore', highScore);
             }
 
-            endRound(true, `+${pointsEarned} Pts`);
+            // Construct a dynamic result message
+            let message = `+${pointsEarned} Pts`;
+            let bonusMessages = [];
+            if (fastBonus > 0) bonusMessages.push("⚡ Fast Guess!");
+            if (streakBonus > 0) bonusMessages.push(`🔥 Streak x${streak}!`);
+            
+            if (bonusMessages.length > 0) {
+                message += `\n(${bonusMessages.join(" & ")})`;
+            }
+
+            endRound(true, message);
         } else {
             handleStreakReset();
             endRound(false, `Streak Reset.`);
