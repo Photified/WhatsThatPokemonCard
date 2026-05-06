@@ -441,6 +441,7 @@
     // --- GAME STATE & LOCAL STORAGE ---
     let cardPool = [];
     let currentCard = null;
+    let currentRoundCards = []; // Tracks all 4 cards used in a round
     let hintLevel = 0;
     let score = 0;
     let timeLeft = 30; 
@@ -506,20 +507,17 @@
         updateUI(); 
         optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center; margin: 10px 0;">Mixing Eras...</p>`;
         
-        // ADDED: set.id:swsh12pt5gg (Galarian Gallery) and (set.id:base1 rarity:"Rare Holo") for nostalgia!
         const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*" OR set.id:swsh12pt5gg OR (set.id:base1 rarity:"Rare Holo")';
         const encodedQuery = encodeURIComponent(rawQuery);
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
         try {
-            // Pick 4 completely unique random pages between 1 and 25
             const randomPages = [];
             while(randomPages.length < 4) {
                 let r = Math.floor(Math.random() * 25) + 1;
                 if(randomPages.indexOf(r) === -1) randomPages.push(r);
             }
 
-            // Fetch 50 cards from all 4 random pages at the exact same time
             const fetchPromises = randomPages.map(page => 
                 fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${page}`, {
                     headers: { "X-Api-Key": apiKey }
@@ -529,10 +527,8 @@
                 })
             );
 
-            // Wait for all 4 fetches to finish
             const results = await Promise.all(fetchPromises);
             
-            // Smash them all together into one massive array
             let combinedData = [];
             results.forEach(data => {
                 if (data.data) {
@@ -540,7 +536,6 @@
                 }
             });
 
-            // Filter out cards missing images and set as the pool
             cardPool = combinedData.filter(card => card.images && card.images.large); 
             
             if(cardPool.length >= 4) {
@@ -550,7 +545,6 @@
             }
         } catch (error) {
             optionsContainer.innerHTML = `<p style="grid-column: span 2; font-size: 0.9rem;"><b>Error:</b> ${error.message}</p>`;
-            // Auto-retry after 2 seconds if it failed
             setTimeout(initGame, 2000);
         }
     }
@@ -566,11 +560,7 @@
         hintLevel = 0;
         timeLeft = 30; 
         
-        // --- UPDATED COORDINATES FOR FLASHLIGHT SPAWN ---
-        // X-axis: 20% to 80% (Left to Right)
         const randX = Math.floor(Math.random() * 60) + 20;
-        
-        // Y-axis: 30% to 70% (Top to Bottom) - Keeps it strictly away from Names & Attacks!
         const randY = Math.floor(Math.random() * 40) + 30;
         
         document.documentElement.style.setProperty('--pos-x', `${randX}%`);
@@ -578,10 +568,25 @@
 
         updateUI();
 
-        // Shuffle the massive multi-era pool every single round
         let shuffledPool = [...cardPool].sort(() => 0.5 - Math.random());
-        let roundCards = shuffledPool.slice(0, 4);
-        currentCard = roundCards[0];
+        
+        // Grab 4 unique names so we don't accidentally get two identical buttons
+        let uniqueCards = [];
+        let seenNames = new Set();
+        for (let card of shuffledPool) {
+            if (!seenNames.has(card.name)) {
+                seenNames.add(card.name);
+                uniqueCards.push(card);
+                if (uniqueCards.length === 4) break;
+            }
+        }
+
+        // Failsafe in case there somehow aren't 4 unique names left
+        if (uniqueCards.length < 4) uniqueCards = shuffledPool.slice(0, 4);
+
+        // Save exactly which 4 cards are in play
+        currentRoundCards = uniqueCards;
+        currentCard = currentRoundCards[0]; // The first one is the answer
 
         cardImage.style.opacity = 0;
         cardImage.style.transition = 'none';
@@ -595,7 +600,7 @@
             hintBtn.disabled = false;
             hintBtn.innerText = "Use Hint (-5 Secs)";
             
-            let options = [...roundCards].sort(() => 0.5 - Math.random());
+            let options = [...currentRoundCards].sort(() => 0.5 - Math.random());
             optionsContainer.innerHTML = '';
             options.forEach(optionCard => {
                 const btn = document.createElement('button');
@@ -655,7 +660,6 @@
         if (selectedName === currentCard.name) {
             let pointsEarned = 100 + (timeLeft * 5); 
 
-            // Fast Guess Bonus: within the first 5 seconds (timeLeft >= 25) & 0 hints
             let fastBonus = 0;
             if (timeLeft >= 25 && hintLevel === 0) {
                 fastBonus = 50;
@@ -665,7 +669,6 @@
             streak++;
             localStorage.setItem('pokeStreak', streak);
 
-            // Streak Bonus: +20 points for every consecutive win past the first
             let streakBonus = 0;
             if (streak > 1) {
                 streakBonus = (streak - 1) * 20;
@@ -679,7 +682,6 @@
                 localStorage.setItem('pokeHighScore', highScore);
             }
 
-            // Construct an HTML-based dynamic result message with styled badges
             let messageHTML = `+${pointsEarned} Pts`;
             let bonusHTML = [];
             
@@ -711,7 +713,6 @@
         resultTitle.innerText = isWin ? "CORRECT!" : "INCORRECT!";
         resultTitle.style.color = isWin ? "#4CAF50" : "var(--poke-red)";
         
-        // Use innerHTML so the badge tags render correctly
         resultMessage.innerHTML = message;
         resultBanner.classList.add('show');
 
@@ -721,8 +722,10 @@
             setTimeout(async () => {
                 await animateSnake(true);
                 
-                // Remove the played card from the pool so it doesn't repeat immediately
-                cardPool = cardPool.filter(c => c.id !== currentCard.id);
+                // CRITICAL CHANGE: Remove ALL 4 cards used in this round so they don't repeat
+                const usedIds = currentRoundCards.map(c => c.id);
+                cardPool = cardPool.filter(c => !usedIds.includes(c.id));
+                
                 startRound(); 
             }, 350); 
             
