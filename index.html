@@ -203,9 +203,7 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Added slightly longer transition for smoothness */
-            
-            /* CHANGED: Starts lower down so it 'drops in' and 'drops out' */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform: translateY(40px) scale(0.9);
             z-index: 10;
             backdrop-filter: blur(4px);
@@ -213,7 +211,6 @@
 
         .result-banner.show {
             opacity: 1;
-            /* Snaps cleanly to the center */
             transform: translateY(0) scale(1);
             pointer-events: auto; 
         }
@@ -519,8 +516,13 @@
         hintLevel = 0;
         timeLeft = 30; 
         
-        const randX = Math.floor(Math.random() * 50) + 25;
-        const randY = Math.floor(Math.random() * 50) + 25;
+        // --- UPDATED COORDINATES FOR FLASHLIGHT SPAWN ---
+        // X-axis: 20% to 80% (Left to Right)
+        const randX = Math.floor(Math.random() * 60) + 20;
+        
+        // Y-axis: 30% to 70% (Top to Bottom) - Keeps it strictly away from Names & Attacks!
+        const randY = Math.floor(Math.random() * 40) + 30;
+        
         document.documentElement.style.setProperty('--pos-x', `${randX}%`);
         document.documentElement.style.setProperty('--pos-y', `${randY}%`);
 
@@ -634,21 +636,17 @@
         resultMessage.innerText = message;
         resultBanner.classList.add('show');
 
-        // CHANGED: Sequence the animations!
         setTimeout(() => {
-            // 1. Drop the banner down and away
             resultBanner.classList.remove('show');
             
-            // 2. Wait 350ms for it to clear out, THEN start the pixel wipe
             setTimeout(async () => {
                 await animateSnake(true);
                 
-                // 3. Set up the next card behind the black screen
                 cardPool = cardPool.filter(c => c.id !== currentCard.id);
                 startRound(); 
             }, 350); 
             
-        }, 1800); // Wait 1.8s for the user to read the banner before dropping it
+        }, 1800); 
     }
 
     function openInfoModal() { infoModal.style.display = "flex"; }
