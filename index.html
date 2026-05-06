@@ -29,7 +29,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Use dvh to perfectly fit mobile screens including address bars */
             height: 100dvh; 
             margin: 0;
             padding: 10px;
@@ -51,7 +50,7 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 0 var(--poke-dark), 0 8px 15px rgba(0,0,0,0.3);
-            flex-shrink: 0; /* Prevents banner from shrinking */
+            flex-shrink: 0; 
         }
 
         .app-title {
@@ -76,7 +75,7 @@
         }
         .settings-icon:hover { transform: rotate(90deg) scale(1.1); color: var(--poke-yellow); }
 
-        /* --- GAME BOARD (Now a Flex Column) --- */
+        /* --- GAME BOARD --- */
         .game-board {
             background-color: var(--poke-blue);
             border: 4px solid var(--poke-yellow);
@@ -86,12 +85,10 @@
             max-width: 420px;
             box-sizing: border-box;
             box-shadow: 0 6px 0 var(--poke-dark), 0 10px 20px rgba(0,0,0,0.4);
-            
-            /* Flex properties to fill remaining vertical space */
             display: flex;
             flex-direction: column;
             flex: 1; 
-            min-height: 0; /* Crucial for nested flexbox shrinking */
+            min-height: 0; 
         }
 
         /* --- STATS GRID --- */
@@ -128,8 +125,8 @@
 
         /* --- FLEXIBLE SCALING CARD CONTAINER --- */
         .card-scale-container {
-            flex: 1; /* Takes up all available space between stats and buttons */
-            min-height: 0; /* Allows it to shrink smaller than its content if needed */
+            flex: 1; 
+            min-height: 0; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -141,8 +138,8 @@
         .card-wrapper {
             background-color: var(--poke-dark);
             height: 100%;
-            max-height: 380px; /* Stops it from getting comically large on tall screens */
-            aspect-ratio: 2.5 / 3.5; /* Locks the exact proportions of a Pokémon card! */
+            max-height: 380px; 
+            aspect-ratio: 2.5 / 3.5; 
             border-radius: 12px;
             border: 3px solid white;
             box-shadow: inset 0 0 20px black, 0 5px 15px rgba(0,0,0,0.4);
@@ -189,7 +186,7 @@
         .controls-wrapper {
             position: relative;
             width: 100%;
-            flex-shrink: 0; /* Prevents buttons from squishing */
+            flex-shrink: 0; 
         }
 
         /* --- IN-GAME RESULT BANNER --- */
@@ -237,16 +234,16 @@
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px; /* Reduced gap */
+            gap: 8px; 
             margin-bottom: 10px;
         }
 
         button {
             background-color: var(--poke-yellow);
             color: var(--poke-dark);
-            border: 2px solid white; /* Thinner borders */
-            padding: 8px 4px; /* Reduced vertical padding */
-            font-size: 0.85rem; /* Smaller text to fit long names */
+            border: 2px solid white; 
+            padding: 8px 4px; 
+            font-size: 0.85rem; 
             font-family: 'Fredoka', sans-serif;
             font-weight: 700;
             border-radius: 8px;
@@ -255,9 +252,9 @@
             box-shadow: 0 4px 0 var(--poke-yellow-dark), 0 4px 4px rgba(0,0,0,0.3);
             text-transform: uppercase;
             letter-spacing: 0px;
-            white-space: nowrap; /* Forces text to stay on one line */
+            white-space: nowrap; 
             overflow: hidden;
-            text-overflow: ellipsis; /* Adds '...' if the name is too long */
+            text-overflow: ellipsis; 
         }
 
         button:active:not(:disabled) { 
@@ -281,7 +278,7 @@
             color: var(--poke-red);
             box-shadow: 0 4px 0 #cccccc, 0 4px 4px rgba(0,0,0,0.3);
             width: 100%;
-            padding: 10px; /* Slightly taller for the main action button */
+            padding: 10px; 
             font-size: 0.9rem;
         }
         
@@ -326,7 +323,14 @@
         .modal-body b { color: var(--poke-yellow); font-size: 1.1rem; }
         .modal-body .btn-container { display: flex; flex-direction: column; gap: 10px; }
 
-        #installBtn { display: none; background-color: #4CAF50; color: white; border-color: white; box-shadow: 0 4px 0 #2E7D32; padding: 10px;}
+        /* Modified Install App Button to be ALWAYS VISIBLE */
+        #installBtn { 
+            background-color: #4CAF50; 
+            color: white; 
+            border-color: white; 
+            box-shadow: 0 4px 0 #2E7D32; 
+            padding: 10px;
+        }
         #installBtn:active:not(:disabled) { box-shadow: 0 0px 0 #2E7D32; transform: translateY(4px); }
         .modal-body .hint-btn { box-shadow: 0 4px 0 #cccccc; transform: none; }
         .modal-body .hint-btn:active { box-shadow: 0 0px 0 #cccccc; transform: translateY(4px); }
@@ -382,7 +386,7 @@
                 🔥 <b>Streaks:</b> Maintained on correct guesses!
             </p>
             <div class="btn-container">
-                <button id="installBtn">📲 Install App</button>
+                <button id="installBtn">📲 Install App to Home Screen</button>
                 <button class="hint-btn" onclick="closeInfoModal()">Close</button>
             </div>
         </div>
@@ -397,17 +401,26 @@
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
+        // Stash the event so it can be triggered later.
         deferredPrompt = e;
-        document.getElementById('installBtn').style.display = 'block';
     });
 
+    // Modified Install Button Logic (Fallback included)
     document.getElementById('installBtn').addEventListener('click', async () => {
         if (deferredPrompt) {
+            // Show the native install prompt
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').innerText = "✅ Installed Successfully";
+                document.getElementById('installBtn').disabled = true;
+            }
             deferredPrompt = null;
+        } else {
+            // Fallback alert for iOS Safari or if already installed
+            alert("To install the app:\n\n🍎 iOS Safari: Tap the Share icon at the bottom, then 'Add to Home Screen'.\n\n🤖 Android/Chrome: Tap the browser menu (⋮) and select 'Install app' or 'Add to Home screen'.\n\n(If you've already installed it, check your device's home screen!)");
         }
     });
 
@@ -537,7 +550,6 @@
             options.forEach(optionCard => {
                 const btn = document.createElement('button');
                 btn.innerText = optionCard.name;
-                // Prevents extremely long names from breaking the button layout
                 btn.title = optionCard.name; 
                 btn.onclick = () => checkAnswer(optionCard.name);
                 optionsContainer.appendChild(btn);
