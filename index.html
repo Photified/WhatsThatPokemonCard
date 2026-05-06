@@ -504,19 +504,21 @@
     // --- INITIALIZATION ---
     async function initGame() {
         updateUI(); 
+        
+        // Removed the series filter! Now it looks for these rarities across ALL eras.
         const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*"';
         const encodedQuery = encodeURIComponent(rawQuery);
         
-        // Bumping the random multiplier up to 25. 
-        // 25 pages * 50 cards = a pool of 1,250 unique cards!
-        const randomPage = Math.floor(Math.random() * 25) + 1; 
+        // With pageSize at 250, there are roughly 12-15 pages total across all Pokémon history for these rarities.
+        // This jumps to a completely random era every time it fetches!
+        const randomPage = Math.floor(Math.random() * 12) + 1; 
 
         // --- PASTE YOUR API KEY HERE ---
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
         try {
-            // Updated fetch call to include the API key header and orderBy
-            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}&orderBy=-set.releaseDate`, {
+            // Maximize pageSize to 250 so we get a massive pool of cards per fetch
+            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&page=${randomPage}`, {
                 headers: {
                     "X-Api-Key": apiKey
                 }
@@ -526,7 +528,7 @@
 
             const data = await res.json();
             
-            // Safety check: if we hit a page that is empty or has too few cards, retry
+            // Safety check: if we randomly pick a page number that is too high/empty, re-roll!
             if (!data.data || data.data.length < 4) {
                 return initGame(); 
             }
