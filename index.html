@@ -441,7 +441,7 @@
     // --- GAME STATE & LOCAL STORAGE ---
     let cardPool = [];
     let currentCard = null;
-    let currentRoundCards = []; // Tracks all 4 cards used in a round
+    let currentRoundCards = []; 
     let hintLevel = 0;
     let score = 0;
     let timeLeft = 30; 
@@ -502,30 +502,48 @@
         });
     }
 
-    // --- INITIALIZATION (MULTI-ERA FETCH) ---
+    // --- INITIALIZATION (7-ERA SPECIFIC FETCH) ---
     async function initGame() {
         updateUI(); 
         optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center; margin: 10px 0;">Mixing Eras...</p>`;
         
-        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*" OR set.id:swsh12pt5gg OR (set.id:base1 rarity:"Rare Holo")';
-        const encodedQuery = encodeURIComponent(rawQuery);
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
         try {
-            const randomPages = [];
-            while(randomPages.length < 4) {
-                let r = Math.floor(Math.random() * 25) + 1;
-                if(randomPages.indexOf(r) === -1) randomPages.push(r);
-            }
+            // Pull exactly 10 cards from all 7 ERAS to create a balanced 70-card rotating pool
+            const queries = [
+                // 1. Vintage (Base Series Holos) - ~8 pages of 10
+                { q: 'set.series:Base rarity:"Rare Holo"', page: Math.floor(Math.random() * 8) + 1 },
+                
+                // 2. Black & White (EX & Full Arts) - ~12 pages of 10
+                { q: 'set.series:"Black & White" (rarity:"Rare Ultra" OR subtypes:EX)', page: Math.floor(Math.random() * 12) + 1 },
+                
+                // 3. XY (EXs only - no Megas here) - ~15 pages of 10
+                { q: 'set.series:XY subtypes:EX', page: Math.floor(Math.random() * 15) + 1 },
 
-            const fetchPromises = randomPages.map(page => 
-                fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${page}`, {
+                // 4. Sun & Moon (GX & Tag Team) - ~30 pages of 10
+                { q: 'set.series:"Sun & Moon" (subtypes:GX OR subtypes:"TAG TEAM")', page: Math.floor(Math.random() * 30) + 1 },
+                
+                // 5. Sword & Shield (Galleries & Ultras) - ~40 pages of 10
+                { q: 'set.series:"Sword & Shield" (rarity:"Trainer Gallery Rare Holo*" OR set.id:swsh12pt5gg OR rarity:"Rare Ultra")', page: Math.floor(Math.random() * 40) + 1 },
+                
+                // 6. Scarlet & Violet (Illustration Rares) - ~20 pages of 10
+                { q: 'set.series:"Scarlet & Violet" (rarity:"Illustration Rare" OR rarity:"Special Illustration Rare")', page: Math.floor(Math.random() * 20) + 1 },
+
+                // 7. Megas (Standing as their own era) - ~8 pages of 10
+                { q: 'subtypes:MEGA', page: Math.floor(Math.random() * 8) + 1 }
+            ];
+
+            // Use pageSize=10 to grab 10 distinct cards from every major generation/type
+            const fetchPromises = queries.map(queryObj => {
+                const encoded = encodeURIComponent(queryObj.q);
+                return fetch(`https://api.pokemontcg.io/v2/cards?q=${encoded}&pageSize=10&page=${queryObj.page}`, {
                     headers: { "X-Api-Key": apiKey }
                 }).then(res => {
                     if (!res.ok) throw new Error(`API error: ${res.status}`);
                     return res.json();
-                })
-            );
+                });
+            });
 
             const results = await Promise.all(fetchPromises);
             
@@ -551,6 +569,7 @@
 
     // --- GAME LOGIC ---
     function startRound() {
+        // Drop below 4 cards means we ran out of our 70-card batch. Fetch again!
         if (cardPool.length < 4) {
             initGame();
             return;
@@ -570,7 +589,6 @@
 
         let shuffledPool = [...cardPool].sort(() => 0.5 - Math.random());
         
-        // Grab 4 unique names so we don't accidentally get two identical buttons
         let uniqueCards = [];
         let seenNames = new Set();
         for (let card of shuffledPool) {
@@ -581,12 +599,10 @@
             }
         }
 
-        // Failsafe in case there somehow aren't 4 unique names left
         if (uniqueCards.length < 4) uniqueCards = shuffledPool.slice(0, 4);
 
-        // Save exactly which 4 cards are in play
         currentRoundCards = uniqueCards;
-        currentCard = currentRoundCards[0]; // The first one is the answer
+        currentCard = currentRoundCards[0]; 
 
         cardImage.style.opacity = 0;
         cardImage.style.transition = 'none';
@@ -722,7 +738,6 @@
             setTimeout(async () => {
                 await animateSnake(true);
                 
-                // CRITICAL CHANGE: Remove ALL 4 cards used in this round so they don't repeat
                 const usedIds = currentRoundCards.map(c => c.id);
                 cardPool = cardPool.filter(c => !usedIds.includes(c.id));
                 
