@@ -203,15 +203,18 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Added slightly longer transition for smoothness */
+            
+            /* CHANGED: Starts lower down so it 'drops in' and 'drops out' */
+            transform: translateY(40px) scale(0.9);
             z-index: 10;
             backdrop-filter: blur(4px);
         }
 
         .result-banner.show {
             opacity: 1;
-            transform: scale(1);
+            /* Snaps cleanly to the center */
+            transform: translateY(0) scale(1);
             pointer-events: auto; 
         }
 
@@ -323,7 +326,6 @@
         .modal-body b { color: var(--poke-yellow); font-size: 1.1rem; }
         .modal-body .btn-container { display: flex; flex-direction: column; gap: 10px; }
 
-        /* Modified Install App Button to be ALWAYS VISIBLE */
         #installBtn { 
             background-color: #4CAF50; 
             color: white; 
@@ -401,16 +403,12 @@
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
-        // Stash the event so it can be triggered later.
         deferredPrompt = e;
     });
 
-    // Modified Install Button Logic (Fallback included)
     document.getElementById('installBtn').addEventListener('click', async () => {
         if (deferredPrompt) {
-            // Show the native install prompt
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
@@ -419,7 +417,6 @@
             }
             deferredPrompt = null;
         } else {
-            // Fallback alert for iOS Safari or if already installed
             alert("To install the app:\n\n🍎 iOS Safari: Tap the Share icon at the bottom, then 'Add to Home Screen'.\n\n🤖 Android/Chrome: Tap the browser menu (⋮) and select 'Install app' or 'Add to Home screen'.\n\n(If you've already installed it, check your device's home screen!)");
         }
     });
@@ -637,12 +634,21 @@
         resultMessage.innerText = message;
         resultBanner.classList.add('show');
 
-        setTimeout(async () => {
-            await animateSnake(true);
+        // CHANGED: Sequence the animations!
+        setTimeout(() => {
+            // 1. Drop the banner down and away
             resultBanner.classList.remove('show');
-            cardPool = cardPool.filter(c => c.id !== currentCard.id);
-            startRound(); 
-        }, 2500); 
+            
+            // 2. Wait 350ms for it to clear out, THEN start the pixel wipe
+            setTimeout(async () => {
+                await animateSnake(true);
+                
+                // 3. Set up the next card behind the black screen
+                cardPool = cardPool.filter(c => c.id !== currentCard.id);
+                startRound(); 
+            }, 350); 
+            
+        }, 1800); // Wait 1.8s for the user to read the banner before dropping it
     }
 
     function openInfoModal() { infoModal.style.display = "flex"; }
