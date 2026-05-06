@@ -506,7 +506,8 @@
         updateUI(); 
         optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center; margin: 10px 0;">Mixing Eras...</p>`;
         
-        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*"';
+        // ADDED: set.id:swsh12pt5gg (Galarian Gallery) and (set.id:base1 rarity:"Rare Holo") for nostalgia!
+        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*" OR set.id:swsh12pt5gg OR (set.id:base1 rarity:"Rare Holo")';
         const encodedQuery = encodeURIComponent(rawQuery);
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
