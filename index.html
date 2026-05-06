@@ -130,7 +130,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            overflow: hidden; /* Keeps the pixel grid inside the border */
+            overflow: hidden; 
         }
 
         .mystery-card {
@@ -140,20 +140,21 @@
             border-radius: 8px; 
         }
 
-        /* Dynamic Hint Classes */
+        /* Dynamic Hint Classes - Updated Hint 3 and added Full Reveal */
         .hint-0 { clip-path: circle(8% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-1 { clip-path: circle(15% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
         .hint-2 { clip-path: circle(25% at var(--pos-x) var(--pos-y)); filter: grayscale(100%); }
-        .hint-3 { clip-path: circle(100% at 50% 50%); filter: grayscale(0%); }
+        .hint-3 { clip-path: circle(40% at var(--pos-x) var(--pos-y)); filter: grayscale(0%); } /* Larger circle, colored, but not full */
+        .reveal-full { clip-path: circle(150% at 50% 50%); filter: grayscale(0%); } /* Shows the whole card */
 
-        /* --- RETRO PIXEL BATTLE TRANSITION (Now inside card-wrapper) --- */
+        /* --- RETRO PIXEL BATTLE TRANSITION --- */
         .battle-transition {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
-            z-index: 20; /* Sits above the card image */
+            z-index: 20; 
             pointer-events: none;
         }
         .pixel-block {
@@ -170,7 +171,7 @@
             width: 100%;
         }
 
-        /* --- IN-GAME RESULT BANNER (Now overlays the buttons) --- */
+        /* --- IN-GAME RESULT BANNER --- */
         .result-banner {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -193,7 +194,7 @@
         .result-banner.show {
             opacity: 1;
             transform: scale(1);
-            pointer-events: auto; /* Catch clicks if needed */
+            pointer-events: auto; 
         }
 
         .result-title {
@@ -579,7 +580,7 @@
     async function endRound(isWin, message) {
         isRoundActive = false;
         clearInterval(timerInterval);
-        cardImage.className = 'mystery-card hint-3'; 
+        cardImage.className = 'mystery-card reveal-full'; 
         
         const btns = optionsContainer.querySelectorAll('button');
         btns.forEach(btn => btn.disabled = true);
