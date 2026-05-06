@@ -501,47 +501,56 @@
         });
     }
 
-    // --- INITIALIZATION ---
+    // --- INITIALIZATION (MULTI-ERA FETCH) ---
     async function initGame() {
         updateUI(); 
+        optionsContainer.innerHTML = `<p style="grid-column: span 2; font-family: 'Fredoka', sans-serif; text-align: center; margin: 10px 0;">Mixing Eras...</p>`;
         
-        // Removed the series filter! Now it looks for these rarities across ALL eras.
         const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*"';
         const encodedQuery = encodeURIComponent(rawQuery);
-        
-        // With pageSize at 250, there are roughly 12-15 pages total across all Pokémon history for these rarities.
-        // This jumps to a completely random era every time it fetches!
-        const randomPage = Math.floor(Math.random() * 12) + 1; 
-
-        // --- PASTE YOUR API KEY HERE ---
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
         try {
-            // Maximize pageSize to 250 so we get a massive pool of cards per fetch
-            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&page=${randomPage}`, {
-                headers: {
-                    "X-Api-Key": apiKey
-                }
-            });
-            
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-
-            const data = await res.json();
-            
-            // Safety check: if we randomly pick a page number that is too high/empty, re-roll!
-            if (!data.data || data.data.length < 4) {
-                return initGame(); 
+            // Pick 4 completely unique random pages between 1 and 25
+            const randomPages = [];
+            while(randomPages.length < 4) {
+                let r = Math.floor(Math.random() * 25) + 1;
+                if(randomPages.indexOf(r) === -1) randomPages.push(r);
             }
 
-            cardPool = data.data.filter(card => card.images && card.images.large); 
+            // Fetch 50 cards from all 4 random pages at the exact same time
+            const fetchPromises = randomPages.map(page => 
+                fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${page}`, {
+                    headers: { "X-Api-Key": apiKey }
+                }).then(res => {
+                    if (!res.ok) throw new Error(`API error: ${res.status}`);
+                    return res.json();
+                })
+            );
+
+            // Wait for all 4 fetches to finish
+            const results = await Promise.all(fetchPromises);
+            
+            // Smash them all together into one massive array
+            let combinedData = [];
+            results.forEach(data => {
+                if (data.data) {
+                    combinedData = combinedData.concat(data.data);
+                }
+            });
+
+            // Filter out cards missing images and set as the pool
+            cardPool = combinedData.filter(card => card.images && card.images.large); 
             
             if(cardPool.length >= 4) {
                 startRound();
             } else {
-                throw new Error("Too few valid cards.");
+                throw new Error("Too few valid cards generated. Retrying...");
             }
         } catch (error) {
             optionsContainer.innerHTML = `<p style="grid-column: span 2; font-size: 0.9rem;"><b>Error:</b> ${error.message}</p>`;
+            // Auto-retry after 2 seconds if it failed
+            setTimeout(initGame, 2000);
         }
     }
 
@@ -568,6 +577,7 @@
 
         updateUI();
 
+        // Shuffle the massive multi-era pool every single round
         let shuffledPool = [...cardPool].sort(() => 0.5 - Math.random());
         let roundCards = shuffledPool.slice(0, 4);
         currentCard = roundCards[0];
@@ -710,6 +720,7 @@
             setTimeout(async () => {
                 await animateSnake(true);
                 
+                // Remove the played card from the pool so it doesn't repeat immediately
                 cardPool = cardPool.filter(c => c.id !== currentCard.id);
                 startRound(); 
             }, 350); 
