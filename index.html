@@ -504,7 +504,7 @@
     // --- INITIALIZATION ---
     async function initGame() {
         updateUI(); 
-        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra"';
+        const rawQuery = 'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare" OR rarity:"Hyper Rare" OR rarity:"Rare Ultra" OR rarity:"Trainer Gallery Rare Holo*"';
         const encodedQuery = encodeURIComponent(rawQuery);
         
         // Bumping the random multiplier up to 25. 
@@ -515,8 +515,8 @@
         const apiKey = "c7f8ecf9-8793-4fd6-a929-2282bf5fb09f"; 
         
         try {
-            // Updated fetch call to include the API key header
-            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}`, {
+            // Updated fetch call to include the API key header and orderBy
+            const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=50&page=${randomPage}&orderBy=-set.releaseDate`, {
                 headers: {
                     "X-Api-Key": apiKey
                 }
