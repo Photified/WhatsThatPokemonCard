@@ -232,6 +232,23 @@
             white-space: pre-line;
         }
 
+        /* --- BONUS BADGES --- */
+        .bonus-badge {
+            display: inline-block;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            margin: 4px 3px 0 3px;
+            border-radius: 6px;
+            border: 2px solid white;
+            text-transform: uppercase;
+            box-shadow: 0 3px 0 var(--poke-dark);
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+        .badge-fast { background-color: #00E5FF; color: var(--poke-dark); }
+        .badge-streak { background-color: #FF5722; color: white; text-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+
         /* --- SLIMMED TACTILE BUTTONS --- */
         .options-grid {
             display: grid;
@@ -362,7 +379,7 @@
     <div class="controls-wrapper">
         <div id="resultBanner" class="result-banner">
             <h2 id="resultTitle" class="result-title">CORRECT!</h2>
-            <p id="resultMessage" class="result-message">+175 Pts</p>
+            <div id="resultMessage" class="result-message">+175 Pts</div>
         </div>
 
         <div class="options-grid" id="optionsContainer">
@@ -607,7 +624,7 @@
         if (selectedName === currentCard.name) {
             let pointsEarned = 100 + (timeLeft * 5); 
 
-            // ⚡ Fast Guess Bonus: within the first 5 seconds (timeLeft >= 25) & 0 hints
+            // Fast Guess Bonus: within the first 5 seconds (timeLeft >= 25) & 0 hints
             let fastBonus = 0;
             if (timeLeft >= 25 && hintLevel === 0) {
                 fastBonus = 50;
@@ -617,7 +634,7 @@
             streak++;
             localStorage.setItem('pokeStreak', streak);
 
-            // 🔥 Streak Bonus: +20 points for every consecutive win past the first
+            // Streak Bonus: +20 points for every consecutive win past the first
             let streakBonus = 0;
             if (streak > 1) {
                 streakBonus = (streak - 1) * 20;
@@ -631,17 +648,18 @@
                 localStorage.setItem('pokeHighScore', highScore);
             }
 
-            // Construct a dynamic result message
-            let message = `+${pointsEarned} Pts`;
-            let bonusMessages = [];
-            if (fastBonus > 0) bonusMessages.push("⚡ Fast Guess!");
-            if (streakBonus > 0) bonusMessages.push(`🔥 Streak x${streak}!`);
+            // Construct an HTML-based dynamic result message with styled badges
+            let messageHTML = `+${pointsEarned} Pts`;
+            let bonusHTML = [];
             
-            if (bonusMessages.length > 0) {
-                message += `\n(${bonusMessages.join(" & ")})`;
+            if (fastBonus > 0) bonusHTML.push(`<span class="bonus-badge badge-fast">Fast Guess</span>`);
+            if (streakBonus > 0) bonusHTML.push(`<span class="bonus-badge badge-streak">Streak x${streak}</span>`);
+            
+            if (bonusHTML.length > 0) {
+                messageHTML += `<br><div style="margin-top: 4px;">${bonusHTML.join(" ")}</div>`;
             }
 
-            endRound(true, message);
+            endRound(true, messageHTML);
         } else {
             handleStreakReset();
             endRound(false, `Streak Reset.`);
@@ -661,7 +679,9 @@
 
         resultTitle.innerText = isWin ? "CORRECT!" : "INCORRECT!";
         resultTitle.style.color = isWin ? "#4CAF50" : "var(--poke-red)";
-        resultMessage.innerText = message;
+        
+        // Use innerHTML so the badge tags render correctly
+        resultMessage.innerHTML = message;
         resultBanner.classList.add('show');
 
         setTimeout(() => {
